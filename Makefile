@@ -1,131 +1,140 @@
-#============================================================================
-# Assembler and Stack
+###############################################################
+# bigint Fall 2021
 #
-# CS II Kent State University
-# J. Maletic Fall 2021
+# CS 23001 Kent State University
+# Make file for project 1
 #
+# This makefile will work for all three milestones of the project.
 #
-#  Makefile works for string.cpp in either local (.) or ../string/
+# However, for milestones 2 and 3 you need to do two things:
+# 1) Add the tests to TESTS (line 22). See comments.
+# 2) In the tests rule (line 37), remove the # for each test
+#    as needed so it is executed
 #
+
 ###############################################################
 # Variables
-CPP          = clang++
-CPP_FLAGS    = -g -Werror -W -Wunused -Wuninitialized -Wshadow -std=c++11
-INCLUDE_OPT  = -I ../string/
-VPATH        = src:../string/
-STRING_PATH  = $(shell if test -f string.cpp; then echo ""; else echo "../string/"; fi)
+CPP  = clang++
+OPTS = -g -Werror -W -Wunused -Wuninitialized -Wshadow -std=c++11
+
+# For milestone 2 add: test_add test_subscript
+# For milestone 3 add: test_times_10 test_times_digit test_multiply
+TESTS  = test_default_ctor test_int_ctor test_equal test_c_str_ctor test_add test_subscript test_times_10 test_times_digit test_multiply
 
 
-#===========================================================================
-# Your STACK tests here.
-STACK_TESTS =  test_ctor_default test_push_pop test_assign test_ctor_copy test_dtor
-
-
-#===========================================================================
+###############################################################
+# The first rule is run if only make is typed
 msg:
-	@echo 'Targets for compiling test programs:'
-	@echo '   tests     - Compile and run tests for stack (Milestone 1)'
-	@echo '   postfix   - Compile and run postfix tests   (Milestone 2)  '
-	@echo '   assembler - Compile and run assembler code  (Milestone 3)'
-	@echo '   string    - Compile string'
-	@echo '   clean     - Removes all .o and executables'
+	@echo 'Targets are:'
+	@echo '  tests:'
+	@echo '  add:'
+	@echo '  multiply:'
+	@echo '  factorial:'
+	@echo '  clean:'
 
-#===========================================================================
-# Compile string.o from Project 2.
+###############################################################
+# Build and run all tests and output demonstration
+#
+tests: $(TESTS)
+	./test_default_ctor
+	./test_int_ctor
+	./test_equal
+	./test_c_str_ctor
+#Milestone 2 - remove #         
+	./test_add
+	./test_subscript
+#Milestone 3
+	./test_times_10
+	./test_times_digit
+	./test_multiply
 
-string.o:	string.hpp  string.cpp
-	${CPP} ${CPP_FLAGS} ${INCLUDE_OPT} -c ${STRING_PATH}string.cpp
+###############################################################
+# Build and run Milestone 2
+add: milestone2
+	./add
 
-string:	string.hpp  string.cpp
-	${CPP} ${CPP_FLAGS} ${INCLUDE_OPT} -c ${STRING_PATH}string.cpp
+###############################################################
+# Build and run Milestone 3
+multiply: milestone3
+	./multiply
 
+###############################################################
+# Build and run factorial
+factorial: extra
+	./factorial
 
-#===========================================================================
-# No compile for stack - it is a template.
+###############################################################
+# Compile bigint 
+bigint.o: bigint.hpp bigint.cpp
+	$(CPP) $(OPTS) -c bigint.cpp
 
+###############################################################
+# Compile and run all tests - uses a wild card.
+test_%: bigint.o test_%.o
+	$(CPP) $(OPTS) -o test_$* bigint.o test_$*.o
 
-#===========================================================================
-# Compile test programs for stack
-test_%: string.o test_%.o 
-	${CPP} ${CPP_FLAGS} string.o test_$*.o -o test_$* 
-
-test_%.o: string.hpp string.cpp stack.hpp test_%.cpp
-	${CPP} ${CPP_FLAGS} ${INCLUDE_OPT} -c test_$*.cpp
-
-
-#===========================================================================
-# Run test programs
-# INSERT your tests for the stack here.
-tests: stack.hpp string.hpp string.cpp ${STACK_TESTS}
-	./test_ctor_default
-	./test_push_pop
-	./test_assign
-	./test_ctor_copy
-	./test_dtor
-
-
-#===========================================================================
-# Compile and run milestone 1 instructor tests
-# Can only be done by instructor  
-M1_PATH = ../../instructors/project3/
-M1_TESTS = M1_ctor_default M1_push_pop M1_empty M1_assign M1_ctor_copy M1_swap 
-
-M1_%: M1_%.o string.o 
-	${CPP} ${CPP_FLAGS} string.o M1_$*.o -o M1_$* 
-
-M1_%.o: string.hpp string.cpp stack.hpp ${M1_PATH}M1_%.cpp
-	cp ${M1_PATH}M1_$*.cpp .
-	${CPP} ${CPP_FLAGS} ${INCLUDE_OPT} -c M1_$*.cpp
-
-M1: stack.hpp string.hpp string.cpp ${M1_TESTS}
-	./M1_ctor_default
-	./M1_push_pop
-	./M1_ctor_copy
-	./M1_swap
-	./M1_assign
-	./M1_empty
-
-M1MEM: stack.hpp string.hpp string.cpp ${STACK_TESTS}
-	valgrind ./M1_ctor_default
-	valgrind ./M1_push_pop
-	valgrind ./M1_ctor_copy
-	valgrind ./M1_swap
-	valgrind ./M1_assign
-	valgrind ./M1_empty
+test_%.o: bigint.hpp test_%.cpp
+	$(CPP) $(OPTS) -c test_$*.cpp
 
 
 
-#===========================================================================
-# Compile postfix
+###############################################################
+# For milestone 2
+milestone2: add.o bigint.o
+	$(CPP) $(OPTS) -o add add.o bigint.o
 
-utilities.o: utilities.cpp utilities.hpp string.cpp string.hpp stack.hpp
-	${CPP} ${CPP_FLAGS} ${INCLUDE_OPT} -c utilities.cpp 
+add.o: bigint.hpp add.cpp
+	$(CPP) $(OPTS) -c add.cpp
 
-postfix.o: postfix.cpp string.hpp string.cpp stack.hpp utilities.hpp
-	${CPP} ${CPP_FLAGS} ${INCLUDE_OPT} -c postfix.cpp 
+###############################################################
+# For milestone 3
+milestone3: multiply.o bigint.o
+	$(CPP) $(OPTS) -o multiply multiply.o bigint.o
 
-postfix: postfix.o string.o utilities.o
-	${CPP} ${CPP_FLAGS} postfix.o string.o utilities.o -o postfix
+multiply.o: bigint.hpp multiply.cpp
+	$(CPP) $(OPTS) -c multiply.cpp
 
-#===========================================================================
-# Compile assembler
+###############################################################
+#    Factorial
+extra: factorial.o bigint.o
+	$(CPP) $(OPTS) -o factorial factorial.o bigint.o
 
-assembler.o: assembler.cpp string.hpp string.cpp stack.hpp utilities.hpp
-	${CPP} ${CPP_FLAGS} ${INCLUDE_OPT} -c assembler.cpp 
-
-assembler: assembler.o string.o utilities.o
-	${CPP} ${CPP_FLAGS} string.o assembler.o  utilities.o -o assembler
-
+factorial.o: bigint.hpp factorial.cpp
+	$(CPP) $(OPTS) -c factorial.cpp
 
 
-#============================================================================
+
+###############################################################
+# Instructor ONLY command  (students can not access CHECKPATH)
+# Run for Milestone 2 & 3
+#
+P1TESTS   = testP1_add testP1_subscript testP1_times_10 testP1_times_digit
+CHECKPATH = ../../instructors/project1/
+
+check2: testP1_add
+	./testP1_add
+
+check3: $(P1TESTS) 
+	./testP1_add
+	./testP1_subscript
+	./testP1_times_10
+	./testP1_times_digit
+
+testP1_%: bigint.o testP1_%.o
+	$(CPP) $(OPTS) -o testP1_$* bigint.o testP1_$*.o
+
+testP1_%.o: bigint.hpp ${CHECKPATH}testP1_%.cpp
+	cp ${CHECKPATH}testP1_$*.cpp .
+	$(CPP) $(OPTS) -c testP1_$*.cpp
+
+
+
+
+###############################################################
 clean:
 	rm -f *.o
-	rm -f postfix 
-	rm -f assembler
-	rm -f $(STACK_TESTS)
-	rm -f $(UTILS_TESTS)
-	rm -f $(M1_TESTS)
-	rm -f M1_*
-
+	rm -f $(TESTS)
+	rm -f $(P1TESTS)
+	rm -f testP1_*
+	rm -f multiply add factorial
 

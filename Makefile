@@ -1,140 +1,90 @@
-###############################################################
-# bigint Fall 2021
+#============================================================================
+# Make file for Profiler
 #
-# CS 23001 Kent State University
-# Make file for project 1
+# CS II Kent State University
 #
-# This makefile will work for all three milestones of the project.
+# J. Maletic 
+# Copyright 2021 Kent State University. All rights reserved.
+# srcML 1.0
 #
-# However, for milestones 2 and 3 you need to do two things:
-# 1) Add the tests to TESTS (line 22). See comments.
-# 2) In the tests rule (line 37), remove the # for each test
-#    as needed so it is executed
+# Fall 2021
 #
+
 
 ###############################################################
 # Variables
-CPP  = clang++
-OPTS = -g -Werror -W -Wunused -Wuninitialized -Wshadow -std=c++11
-
-# For milestone 2 add: test_add test_subscript
-# For milestone 3 add: test_times_10 test_times_digit test_multiply
-TESTS  = test_default_ctor test_int_ctor test_equal test_c_str_ctor test_add test_subscript test_times_10 test_times_digit test_multiply
-
+CPP      = clang++
+CPP_OPTS = -g -Wall -W -Wunused -Wuninitialized -Wshadow -std=c++11
 
 ###############################################################
 # The first rule is run if only make is typed
 msg:
 	@echo 'Targets are:'
-	@echo '  tests:'
-	@echo '  add:'
-	@echo '  multiply:'
-	@echo '  factorial:'
-	@echo '  clean:'
+	@echo '  profiler  - Compile all profiler code.'
+	@echo '  p-simple  - Compile p-simple          '
+	@echo '  sort      - Compile sort code.        '
+	@echo '  p-sort    - Compile p-sort code.      '
+	@echo '  clean     - Remove executables and .o.'
 
 ###############################################################
-# Build and run all tests and output demonstration
-#
-tests: $(TESTS)
-	./test_default_ctor
-	./test_int_ctor
-	./test_equal
-	./test_c_str_ctor
-#Milestone 2 - remove #         
-	./test_add
-	./test_subscript
-#Milestone 3
-	./test_times_10
-	./test_times_digit
-	./test_multiply
+profiler: main.o ASTree.o 
+	$(CPP) $(CPP_OPTS) -o profiler main.o ASTree.o
+  
+main.o: main.cpp ASTree.hpp 
+	$(CPP) $(CPP_OPTS) -c main.cpp
 
-###############################################################
-# Build and run Milestone 2
-add: milestone2
-	./add
-
-###############################################################
-# Build and run Milestone 3
-multiply: milestone3
-	./multiply
-
-###############################################################
-# Build and run factorial
-factorial: extra
-	./factorial
-
-###############################################################
-# Compile bigint 
-bigint.o: bigint.hpp bigint.cpp
-	$(CPP) $(OPTS) -c bigint.cpp
-
-###############################################################
-# Compile and run all tests - uses a wild card.
-test_%: bigint.o test_%.o
-	$(CPP) $(OPTS) -o test_$* bigint.o test_$*.o
-
-test_%.o: bigint.hpp test_%.cpp
-	$(CPP) $(OPTS) -c test_$*.cpp
+ASTree.o: ASTree.hpp ASTree.cpp
+	$(CPP) $(CPP_OPTS) -c ASTree.cpp
 
 
 
-###############################################################
-# For milestone 2
-milestone2: add.o bigint.o
-	$(CPP) $(OPTS) -o add add.o bigint.o
+#==============================================================
+# Compile profile.cpp
+profile.o: profile.hpp profile.cpp
+	$(CPP) $(CPP_OPTS) -c profile.cpp
 
-add.o: bigint.hpp add.cpp
-	$(CPP) $(OPTS) -c add.cpp
 
-###############################################################
-# For milestone 3
-milestone3: multiply.o bigint.o
-	$(CPP) $(OPTS) -o multiply multiply.o bigint.o
+#==============================================================
+# p-simple
+p-simple: p-simple.o profile.o
+	$(CPP) $(CPP_OPTS) -o p-simple p-simple.o profile.o 
 
-multiply.o: bigint.hpp multiply.cpp
-	$(CPP) $(OPTS) -c multiply.cpp
+p-simple.o: p-simple.cpp profile.hpp
+	$(CPP) $(CPP_OPTS) -c p-simple.cpp
 
-###############################################################
-#    Factorial
-extra: factorial.o bigint.o
-	$(CPP) $(OPTS) -o factorial factorial.o bigint.o
 
-factorial.o: bigint.hpp factorial.cpp
-	$(CPP) $(OPTS) -c factorial.cpp
 
+#==============================================================
+# sort
+sort: sort.o sort_lib.o
+	$(CPP) $(CPP_OPTS) -o sort sort.o sort_lib.o
+
+sort.o: sort_lib.h sort.cpp
+	$(CPP) $(CPP_OPTS) -c sort.cpp
+
+sort_lib.o: sort_lib.h sort_lib.cpp
+	$(CPP) $(CPP_OPTS) -c sort_lib.cpp
+
+#==============================================================
+# p-sort
+# p-sort.cpp
+# p-sort_lib.cpp
+
+p-sort: profile.o p-sort.o p-sort_lib.o
+	$(CPP) $(CPP_OPTS) -o p-sort profile.o p-sort.o p-sort_lib.o
+
+p-sort.o: profile.hpp sort_lib.h p-sort.cpp
+	$(CPP) $(CPP_OPTS) -c p-sort.cpp
+
+p-sort_lib.o: profile.hpp sort_lib.h p-sort_lib.cpp
+	$(CPP) $(CPP_OPTS) -c p-sort_lib.cpp
 
 
 ###############################################################
-# Instructor ONLY command  (students can not access CHECKPATH)
-# Run for Milestone 2 & 3
-#
-P1TESTS   = testP1_add testP1_subscript testP1_times_10 testP1_times_digit
-CHECKPATH = ../../instructors/project1/
-
-check2: testP1_add
-	./testP1_add
-
-check3: $(P1TESTS) 
-	./testP1_add
-	./testP1_subscript
-	./testP1_times_10
-	./testP1_times_digit
-
-testP1_%: bigint.o testP1_%.o
-	$(CPP) $(OPTS) -o testP1_$* bigint.o testP1_$*.o
-
-testP1_%.o: bigint.hpp ${CHECKPATH}testP1_%.cpp
-	cp ${CHECKPATH}testP1_$*.cpp .
-	$(CPP) $(OPTS) -c testP1_$*.cpp
-
-
-
-
-###############################################################
+#This will clean up everything via "make clean"
 clean:
+	rm -f profiler
+	rm -f sort
 	rm -f *.o
-	rm -f $(TESTS)
-	rm -f $(P1TESTS)
-	rm -f testP1_*
-	rm -f multiply add factorial
+	rm -f p-*
 
